@@ -1,6 +1,7 @@
 import statistics
 import random
 import movie_storage_sql as storage
+from movie_api import get_data_from_api, title
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -39,30 +40,52 @@ def list_movies():
 
 
 def add_movie():
-    """Add a new movie to the collection."""
+    """Add a new movie by fetching its data from OMDb."""
     movies = storage.list_movies()
     movie = input("\033[33m\n Enter new movie name: \033[0m").strip()
     if not movie:
         print("\033[31m Movie name cannot be empty.\033[0m")
         return
+
     if movie in movies:
         print(f"\033[31m Movie\033[35m\033[1m  {movie}"
               f"\033[31m already exist.\033[0m")
         return
-    year = input("\033[33m Enter year of release: \033[0m").strip()
+
+    print("\033[36m Fetching movie data...\033[0m")
+    movie_data = get_data_from_api(movie)
+    if movie_data is None:
+        return
+
+    title = movie_data.get('Title', '').strip()
+    year_str = movie_data.get('Year', '')
+    rating_str = movie_data.get('imdbRating', '')
+    poster = movie_data.get('Poster', '')
+
     try:
-        rating = float(input("\033[33m Enter new movie rating (1-10):"
-                             " \033[0m"))
-        if 1 <= rating <= 10:
-            storage.add_movie(movie, year, rating)
-            print(f"\033[32m Movie \033[35m\033[1m{movie}\033[32m"
-                  f" successfully added\033[0m")
-        else:
-            print(f"\033[31m Rating \033[34m{rating :.1f}\033[31m"
-                  f" is invalid\033[0m")
-    except ValueError:
-        print("\033[31m Invalid rating. Please enter a number.\033[0m")
-    return
+        year = int(year_str.split('-')[0])
+    except (ValueError, AttributeError):
+        print(f"\033[31m Invalid year '{year_str}' received from API.\033[0m")
+        return
+
+    if rating_str == 'N/A' or not rating_str:
+        rating = 0.0
+    else:
+        try:
+            rating = float(rating_str)
+            if not (0 <= rating <= 10):
+                print(f"\033[31m Rating {rating} out of range (1-10).\033[0m")
+                return
+        except ValueError:
+            print(f"\033[31m Invalid rating format '{rating_str}'.\033[0m")
+            return
+
+        try:
+            storage.add_movie(title, year, rating, poster)
+            print(f"\033[32m Movie \033[35m\033[1m{title}\033[32m"
+                  f"({year}) added successfully!\033[0m")
+        except Exception as e:
+            print(f"\033[31m Database error: {e}\033[0m")
 
 
 def delete_movie():
@@ -88,9 +111,9 @@ def update_movie():
               f" doesn't exist!\033[0m")
         return
     try:
-        rating = float(input("\033[33m Enter new movie rating (1-10):"
+        rating = float(input("\033[33m Enter new movie rating (0-10):"
                              " \033[0m"))
-        if 1 <= rating <= 10:
+        if 0 <= rating <= 10:
             storage.update_movie(movie, rating)
             print(f"\033[32m Movie \033[35m\033[1m{movie}\033[32m"
                   f" successfully  updated\033[0m")

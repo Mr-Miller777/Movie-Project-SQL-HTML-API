@@ -2,3 +2,5 @@ movies.db
 tests.py
 .idea/
 __pycache__/
+/.env
+.gitignore
