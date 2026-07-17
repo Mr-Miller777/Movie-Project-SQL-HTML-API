@@ -1,4 +1,4 @@
-import movie_storage_sql as storage
+from data import movie_storage_sql as storage
 
 
 def serialize_movie_grid(title, data):

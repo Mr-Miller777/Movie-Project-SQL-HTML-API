@@ -1,7 +1,7 @@
 import statistics
 import random
 import web_generator
-import movie_storage_sql as storage
+from data import movie_storage_sql as storage
 from movie_api import get_data_from_api
 from dotenv import load_dotenv
 
