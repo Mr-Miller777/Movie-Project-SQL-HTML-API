@@ -35,9 +35,3 @@ def get_data_from_api(title):
         print(f'Invalid JSON response: {e}')
 
     return None
-
-
-
-
-title = 'titanic'
-print(get_data_from_api(title))

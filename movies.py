@@ -1,7 +1,8 @@
 import statistics
 import random
+import web_generator
 import movie_storage_sql as storage
-from movie_api import get_data_from_api, title
+from movie_api import get_data_from_api
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -69,23 +70,24 @@ def add_movie():
         return
 
     if rating_str == 'N/A' or not rating_str:
-        rating = 0.0
-    else:
-        try:
-            rating = float(rating_str)
-            if not (0 <= rating <= 10):
-                print(f"\033[31m Rating {rating} out of range (1-10).\033[0m")
-                return
-        except ValueError:
-            print(f"\033[31m Invalid rating format '{rating_str}'.\033[0m")
-            return
+        print(f"\033[31m No rating available for '{title}'.\033[0m")
+        return
 
-        try:
-            storage.add_movie(title, year, rating, poster)
-            print(f"\033[32m Movie \033[35m\033[1m{title}\033[32m"
-                  f"({year}) added successfully!\033[0m")
-        except Exception as e:
-            print(f"\033[31m Database error: {e}\033[0m")
+    try:
+        rating = float(rating_str)
+        if not (0 <= rating <= 10):
+            print(f"\033[31m Rating {rating} out of range (1-10).\033[0m")
+            return
+    except ValueError:
+        print(f"\033[31m Invalid rating format '{rating_str}'.\033[0m")
+        return
+
+    try:
+        storage.add_movie(title, year, rating, poster)
+        print(f"\033[32m Movie \033[35m\033[1m{title}\033[32m"
+              f"({year}) added successfully!\033[0m")
+    except Exception as e:
+        print(f"\033[31m Database error: {e}\033[0m")
 
 
 def delete_movie():
@@ -191,6 +193,11 @@ def movies_sorted_by_rating():
               f" \033[34m{data['rating'] :.1f}\033[0m")
 
 
+def generate_website():
+    """Generates a website from an SQL database."""
+    web_generator.generate_web()
+
+
 def main():
     """Main program loop."""
     menu = [
@@ -228,10 +235,8 @@ def main():
             search_movie()
         elif menu_point == 8:
             movies_sorted_by_rating()
-            '''
         elif menu_point == 9:
             generate_website()
-            '''
         input("\033[33m\n Press enter to continue \033[0m")
 
 
